@@ -1,84 +1,163 @@
 ---
 marp: true
-theme: academic
+theme: academic-progression
 paginate: true
 math: katex
+footer: '**Introduction**
+**GCG Baseline**
+**Black-Box Adaptations**
+**Genetic Algorithm**
+**Attack Pipeline**
+**Optimization**
+**Results**
+**Conclusion**'
 ---
 
 <!-- _class: lead -->
+<!-- _footer: "" -->
 
-# Marpで研究室の発表スライドを作る
-
-#### 〜Beamerを卒業しよう〜
+# Automated Black-Box Jailbreaking<br>of LLMs via Genetic Algorithms
 
 <br>
 
-**著者 太郎**
-ほげほげ研究室 M2
-YYYY/MM/DD
+**@Josph27**
+LLM Security
+2026
 
 ---
 
-<!-- _header: 目次 -->
+<!-- _header: Introduction -->
+<!-- _class: toc-1 -->
 
-1. はじめに
-1. コードブロック
-1. 数式
-1. 図
+![w:900 center](images/paper-header.png)
 
----
+Paper's goals:
 
-<!-- _header: はじめに -->
-
-- Marp とは **Markdown** で**スライド**を作成するためのソフトウェアである。
-  - 基本的な Markdown のシンタックスがサポートされている。
-- Markdown 上で `---` という区切り線を入れるだけで、次のページに移動することができる。$^1$
-
-> 1: Marp は CommonMark という Markdown の仕様に沿って開発されているため、CommonMark に含まれていない「脚注」の文法（`[^1]` を使うもの）が提供されていない。そこで、https://github.com/marp-team/marp/discussions/150#discussioncomment-1302384 を参照して擬似的に脚注を実現した。
+- **Master-key suffix** — universal jailbreak for any model
+- **Full automation** through Genetic Algorithm
+- **Restricted environment** — Text in / text out only
 
 ---
 
-<!-- _header: コードブロック -->
+<!-- _header: GCG - industry standard -->
+<!-- _class: toc-2 -->
 
-```python
-import torch
-print(torch.cuda.is_available())
-```
+Greedy Coordinate Gradient (GCG) - Zhou et al. 2023
 
-こんな感じでコードブロックを書くことができる。
+- **Define** target response (eg. "Yes, here's a...")
 
-```python
-from transformers import AutoModelForMaskedLM, AutoTokenizer
-model = AutoModelForMaskedLM.from_pretrained("cl-tohoku/bert-base-japanese-whole-word-masking")
-tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese-whole-word-masking")
+- **Initiate** master-key token sequence
 
-inputs = tokenizer.encode_plus("私はとても[MASK]です。", return_tensors='pt')
-outputs = model(**inputs)
-tokenizer.convert_ids_to_tokens(outputs.logits[0][1:-1].argmax(axis=-1))
-```
+- **Compute** gradients pointing towards the target response for each token.
 
-横幅は自動調整される（ドキュメントの[Auto-scaling](https://github.com/marp-team/marp-core#auto-scaling-features)を参照）。
+- **Greedily select** top token swaps based on the gradient.
+
+- **Evaluate** swaps through forward passes and probability.
+
+- **Iterate** until the probability is high enough.
+
+GCG requires **white-box access** — gradients and log response probability distribution.
 
 ---
 
-<!-- _header: 数式 -->
+<!-- _header: Black-Box Adaptation -->
+<!-- _class: toc-3 -->
 
-$$ I_{xx}=\int\int_Ry^2f(x,y)\cdot{}dydx $$
+- Negative log-likelihood is unavailable — no gradient information.
 
-$$
-f(x) = \int_{-\infty}^\infty
-    \hat f(\xi)\,e^{2 \pi i \xi x}
-    \,d\xi
-$$
+**How the GA solves this through fitness approximation:**
 
-こんな感じで数式を書くことができる。もちろんインラインの $\LaTeX$ も使える。  
-ついでに絵文字も使える:smile:
+- Measure _"closeness"_ to desired response via **semantic similarity** instead of likelihood.
+- Embed responses and targets into a shared **vector space**
+- compute **cosine similarity**:
+  $$\text{cos}(\vec{a}, \vec{b}) = \frac{\vec{a} \cdot \vec{b}}{\|\vec{a}\| \cdot \|\vec{b}\|}$$
 
 ---
 
-<!-- _header: 図 -->
+<!-- _header: Genetic Algorithm -->
+<!-- _class: toc-4 -->
 
-1. まず[このいらすとやのリンク](https://www.irasutoya.com/2018/10/blog-post_723.html)から画像（`kenkyu_woman_seikou.png`）を右クリックでダウンロードしてください。
-2. この Markdown のあるディレクトリの中に `images` という名前のディレクトリを作り、先ほどダウンロードした画像を配置してください。これで準備が整いました。
+1. **Population initiation algorithm** — random token sequences
+2. **Fitness function** — cosine similarity
+3. **Parents selection** - tournament selection ($k = 2$)
+4. **Offspring Generation**:
 
-![w:300 center](./images/kenkyu_woman_seikou.png)
+- **Elitism** — $\lambda = 1/5$ preserved directly into the next generation.
+- One-point token-sequence crossover.
+- Token-wise mutation.
+
+---
+
+<!-- _header: Attack Pipeline -->
+<!-- _class: toc-5 fill-image no-sidebar -->
+
+![center Pipeline diagram showing the black-box GA jailbreaking flow](images/diagram2.png)
+
+---
+
+<!-- _header: Optimizing hyperparameters, Target models -->
+<!-- _class: toc-6 small-text -->
+
+| Component                 | Tested Values             |
+| :------------------------ | :------------------------ |
+| **Target Models**         | LLaMA2-7b-chat, Vicuna-7b |
+| **Sentence Embedders**    | BGE, MPNet, MiniLM        |
+| **Population Size ($n$)** | 10, 20, 30                |
+| **Suffix Length ($m$)**   | 20, 40, 60 tokens         |
+| **Generations ($g$)**     | 100                       |
+| **Fitness Subset ($c$)**  | 50 prompts per generation |
+
+**Compute per key:**
+
+- $(10/20/30) \times 100 \times 50 = (50 000/ 100 000/ 150 000)$ API calls
+
+**Complexity:**
+
+- actually very efficient compared to GCG
+
+---
+
+<!-- _header: Results -->
+<!-- _class: toc-7 -->
+
+| Target Model  | $n$ | Embedder | Baseline | ASR ($m=20$) | ASR ($m=40$) | ASR ($m=60$) |
+| :------------ | :-: | :------- | :------: | :----------: | :----------: | :----------: |
+| **LLaMA2-7b** | 10  | MPNet    |  16.3%   |    99.4%     |  **99.7%**   |    98.4%     |
+| **Vicuna-7b** | 10  | MPNet    |   0.6%   |    97.1%     |  **98.4%**   |    97.1%     |
+| **LLaMA2-7b** | 30  | BGE      |  16.3%   |    99.4%     |    97.8%     |    99.0%     |
+| **Vicuna-7b** | 30  | BGE      |   0.6%   |    96.5%     |    92.3%     |    94.6%     |
+| **LLaMA2-7b** | 30  | MiniLM   |  16.3%   |    99.4%     |    98.4%     |    98.1%     |
+| **Vicuna-7b** | 30  | MiniLM   |   0.6%   |    95.5%     |    97.4%     |    94.2%     |
+
+    Similar model architectures
+
+    Shorter token lengths perform better overall
+
+---
+
+<!-- _header: Conclusion -->
+<!-- _class: toc-8 small-text -->
+
+Clear signal: **weight-level alignment is insufficient.**
+
+Required defense methods
+
+- **Perplexity Filtering** — detect anomalous token sequences at inference time.
+- **Semantic Guardian Models** — secondary classifiers evaluating query intent.
+- **Token Smoothing** — disrupt adversarial token patterns via controlled noise.
+
+LLM security beyond public harm: **distillation attacks defense**
+
+Good example: **Claude Fable** hypersensitive evaluation with escalation for deep query-intent classification.
+
+---
+
+<!-- _class: lead -->
+<!-- _footer: "" -->
+
+# Q & A
+
+<br>
+
+**Automated Black-Box Jailbreaking of LLMs via Genetic Algorithms**
+Lapid et al., Ben-Gurion University
