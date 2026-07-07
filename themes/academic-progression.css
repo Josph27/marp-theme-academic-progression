@@ -1,0 +1,164 @@
+/* @theme academic-progression */
+
+@import "academic";
+
+/*
+ * academic-progression — extends academic with a sidebar table of contents.
+ *
+ * Define the TOC once in frontmatter:
+ *   footer: '**Introduction**\n**GCG Baseline**\n**Results**\n**Conclusion**'
+ *
+ * Highlight the active item per slide with a class (no inline CSS):
+ *   <!-- _class: toc-3 -->
+ *
+ * Combine with other classes: <!-- _class: toc-3 small-text -->
+ *
+ * Classes: lead (title/Q&A, auto-hides sidebar), fill-image, no-sidebar, small-text
+ */
+
+/* ── Layout: content area + sidebar ─────────────────── */
+
+:root {
+	--color-background: #ffe4e0; /* warm beige sidebar */
+}
+section {
+	background-color: #ffffff !important; /* content stays white */
+	padding-left: 198px !important; /* 170px sidebar + 28px gap */
+	padding-right: 40px !important;
+}
+section.lead {
+	padding-left: 40px !important; /* restore full width */
+}
+
+section > footer {
+	all: unset; /* wipe gaia defaults */
+	box-sizing: border-box; /* restore after all:unset */
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 170px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	padding: 15vh 0;
+	background: var(--color-background, #ffffff);
+	border-right: 2px solid var(--color-highlight, #800000);
+}
+section.lead > footer,
+section.no-sidebar > footer {
+	display: none !important;
+}
+
+/* ── TOC items ─────────────────────────────────────── */
+
+footer > * {
+	margin: 0;
+	padding: 7px 12px;
+	font-size: 0.44em;
+	line-height: 1.3;
+	color: var(--color-foreground, #333333);
+	background: transparent;
+}
+
+/* _class: toc-N — highlight the Nth TOC item (no inline CSS needed) */
+section.toc-1 footer > *:nth-of-type(1) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-2 footer > *:nth-of-type(2) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-3 footer > *:nth-of-type(3) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-4 footer > *:nth-of-type(4) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-5 footer > *:nth-of-type(5) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-6 footer > *:nth-of-type(6) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-7 footer > *:nth-of-type(7) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-8 footer > *:nth-of-type(8) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-9 footer > *:nth-of-type(9) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-10 footer > *:nth-of-type(10) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-11 footer > *:nth-of-type(11) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+section.toc-12 footer > *:nth-of-type(12) {
+	background: #800000 !important;
+	color: #ffffff !important;
+}
+
+/* ── Header ────────────────────────────────────────── */
+
+header {
+	left: 170px !important;
+}
+section.lead header,
+section.no-sidebar header {
+	left: 0 !important;
+}
+
+/* ── Utility classes ───────────────────────────────── */
+
+section.small-text > p {
+	font-size: 0.85em;
+}
+
+section.fill-image img {
+	flex: 1 1 0;
+	width: 100%;
+	object-fit: contain;
+	min-height: 0;
+	margin: 0 !important;
+}
+
+section.no-sidebar {
+	padding-left: 40px !important;
+}
+
+/* ── Refinements: lists, paragraphs, tables ─────────── */
+
+ul,
+ol {
+	padding-left: 2.2em !important;
+	margin-top: 0.2em !important;
+}
+li {
+	font-size: 0.85em;
+}
+
+p {
+	margin-top: 0.4em !important;
+}
+p + ul,
+p + ol {
+	margin-top: 0.1em !important;
+}
+
+table {
+	margin: 0.6em auto 0 auto !important;
+	font-size: 0.7em;
+}
